@@ -16,6 +16,7 @@ import org.activiti.spring.integration.ActivitiInboundGateway;
 import org.activiti.spring.integration.IntegrationActivityBehavior;
 import org.junit.Assert;
 import org.junit.Test;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.integration.IntegrationAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -36,6 +37,23 @@ import org.springframework.web.client.RestTemplate;
  * @author Josh Long
  */
 public class IntegrationAutoConfigurationTest {
+  
+  @EnableAutoConfiguration
+  @Configuration
+  @Import({DataSourceAutoConfiguration.class,
+          DataSourceProcessEngineAutoConfiguration.DataSourceProcessEngineConfiguration.class,
+          IntegrationAutoConfiguration.class})
+  public static class BaseConfiguration {
+
+      public RestTemplate restTemplate() {
+          return new RestTemplate();
+      }
+
+      @Bean
+      public TaskExecutor taskExecutor() {
+          return new SimpleAsyncTaskExecutor();
+      }
+  }
 	
 	 @Configuration
    @Import(BaseConfiguration.class)
@@ -73,8 +91,7 @@ public class IntegrationAutoConfigurationTest {
        }
 
        public static class AnalysingService {
-           private final AtomicReference<String> stringAtomicReference
-                   = new AtomicReference<String>();
+           private final AtomicReference<String> stringAtomicReference = new AtomicReference<String>();
 
            public void dump(String projectId) {
                this.stringAtomicReference.set(projectId);
@@ -85,7 +102,6 @@ public class IntegrationAutoConfigurationTest {
            }
        }
    }
-
 
    public static final String projectId = "2143243";
 
@@ -122,24 +138,6 @@ public class IntegrationAutoConfigurationTest {
                 applicationContext.getBean(InboundGatewayConfiguration.AnalysingService.class)
                         .getStringAtomicReference().get().equals(projectId));
     }
-
-    @Configuration
-    @Import({DataSourceAutoConfiguration.class,
-            DataSourceProcessEngineAutoConfiguration.DataSourceProcessEngineConfiguration.class,
-            IntegrationAutoConfiguration.class})
-    public static class BaseConfiguration {
-
-        @Bean
-        public RestTemplate restTemplate() {
-            return new RestTemplate();
-        }
-
-        @Bean
-        public TaskExecutor taskExecutor() {
-            return new SimpleAsyncTaskExecutor();
-        }
-    }
-
 
    
 }

@@ -2,20 +2,35 @@ package activiti;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 import org.activiti.engine.ProcessEngine;
 import org.activiti.engine.RuntimeService;
 import org.activiti.engine.delegate.DelegateExecution;
+import org.activiti.engine.delegate.event.ActivitiEvent;
+import org.activiti.engine.impl.delegate.event.ActivitiEngineEvent;
+import org.activiti.spring.boot.ActivitiEventMessageChannel;
 import org.activiti.spring.integration.ActivitiInboundGateway;
 import org.activiti.spring.integration.IntegrationActivityBehavior;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.event.EventListener;
+import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.integration.dsl.IntegrationFlow;
 import org.springframework.integration.dsl.IntegrationFlows;
+import org.springframework.integration.dsl.SourcePollingChannelAdapterSpec;
+import org.springframework.integration.dsl.channel.MessageChannels;
+import org.springframework.integration.dsl.core.PollerFactory;
+import org.springframework.integration.dsl.core.PollerSpec;
+import org.springframework.integration.dsl.support.Function;
 import org.springframework.integration.dsl.support.GenericHandler;
+import org.springframework.integration.endpoint.SourcePollingChannelAdapter;
+import org.springframework.integration.scheduling.PollerMetadata;
+import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.support.MessageBuilder;
 
 @SpringBootApplication
@@ -89,6 +104,25 @@ public class Application {
         };
     } // ...
 
+    
+    @Bean
+    @ActivitiEventMessageChannel
+    public PublishSubscribeChannel activitiMessageChannel() {
+      PublishSubscribeChannel channel = MessageChannels.publishSubscribe().get() ;
+      return channel;
+    }
+    
+    @Bean
+    public IntegrationFlow integrationFlow() {
+      return IntegrationFlows.from(activitiMessageChannel()).handle(ActivitiEvent.class, new GenericHandler<ActivitiEvent>() {
+        @Override
+        public Object handle(ActivitiEvent payload, Map<String, Object> headers) {
+          System.out.println("From the integration flow " + payload);
+          return null;
+        }
+      }).get();
+    }
 
+    
 }
 

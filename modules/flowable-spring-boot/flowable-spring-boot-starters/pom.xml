@@ -13,9 +13,6 @@
     <artifactId>flowable-spring-boot-starters</artifactId>
 
     <packaging>pom</packaging>
-    <properties>
-        <spring-integration-java-dsl.version>1.0.0.RELEASE</spring-integration-java-dsl.version>
-    </properties>
     <modules>
         <module>flowable-spring-boot-starter-basic</module>
         <module>flowable-spring-boot-starter-rest-api</module>
@@ -28,7 +25,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
-            <version>${spring.boot.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

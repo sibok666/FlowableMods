@@ -13,6 +13,8 @@
 package org.activiti.spring.boot;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -27,6 +29,7 @@ import org.activiti.engine.ProcessEngine;
 import org.activiti.engine.RepositoryService;
 import org.activiti.engine.RuntimeService;
 import org.activiti.engine.TaskService;
+import org.activiti.engine.delegate.event.ActivitiEventListener;
 import org.activiti.spring.ProcessEngineFactoryBean;
 import org.activiti.spring.SpringAsyncExecutor;
 import org.activiti.spring.SpringCallerRunsRejectedJobsHandler;
@@ -69,7 +72,8 @@ public abstract class AbstractProcessEngineAutoConfiguration
   }
 
   protected SpringProcessEngineConfiguration baseSpringProcessEngineConfiguration(DataSource dataSource, PlatformTransactionManager platformTransactionManager,
-                                                                                  SpringAsyncExecutor springAsyncExecutor) throws IOException {
+                                                                                  SpringAsyncExecutor springAsyncExecutor,
+                                                                                  ActivitiEventListener[] activitiEventListeners) throws IOException {
 
     List<Resource> procDefResources = this.discoverProcessDefinitionResources(
         this.resourceLoader, this.activitiProperties.getProcessDefinitionLocationPrefix(),
@@ -97,6 +101,15 @@ public abstract class AbstractProcessEngineAutoConfiguration
     conf.setMailServerUseTLS(activitiProperties.isMailServerUseTls());
     
     conf.setHistoryLevel(activitiProperties.getHistoryLevel());
+    
+    if (activitiEventListeners != null) {
+      List<ActivitiEventListener> listeners = conf.getEventListeners(); 
+      if (listeners == null) {
+        listeners = new ArrayList<>();
+        conf.setEventListeners(listeners);
+      }
+      listeners.addAll(Arrays.asList(activitiEventListeners));
+    }
 
     if (activitiProperties.getCustomMybatisMappers() != null) {
       conf.setCustomMybatisMappers(getCustomMybatisMapperClasses(activitiProperties.getCustomMybatisMappers()));
